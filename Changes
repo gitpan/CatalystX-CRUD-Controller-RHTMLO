@@ -3,3 +3,7 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
 0.01    19 Oct 2007
         First version, released on an unsuspecting world.
 
+0.02    20 Oct 2007
+        * fix POD line so that CPAN doesn't think there's doc separate from code
+
+

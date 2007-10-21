@@ -3,11 +3,11 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 NAME
 
-CatalystX::CRUD::Controller::RHTML - Rose::HTML::Objects CRUD controller
+CatalystX::CRUD::Controller::RHTMLO - Rose::HTML::Objects CRUD controller
 
 =head1 SYNOPSIS
 
