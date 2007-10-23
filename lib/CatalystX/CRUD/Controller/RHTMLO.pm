@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 NAME
 
@@ -27,27 +27,69 @@ The following methods are new or override base methods.
 
 =cut
 
-=head2 save_obj( I<context>, I<object> )
+=head2 form_to_object( I<context> )
 
-Overrides base save_obj() to set the stash() C<object_id> in the I<object>.
-The primarly column will also be set to C<undef> if the C<object_id> is
-undefined or zero.
+Overrides base method.
 
 =cut
 
-sub save_obj {
-    my ( $self, $c, $o ) = @_;
+sub form_to_object {
+    my ( $self, $c ) = @_;
 
-    my $pk = $self->primary_key;
+    my $form      = $c->stash->{form};
+    my $obj       = $c->stash->{object};
+    my $obj_meth  = $self->init_object;
+    my $form_meth = $self->init_form;
+    my $id        = $c->stash->{object_id};
+    my $pk        = $self->primary_key;
+
+    # initialize the form with the object's values
+    $form->$form_meth( $obj->delegate );
+
+    # set param values from request
+    $form->params( $self->param_hash($c) );
+
+    # id always comes from url but not necessarily from form
+    $form->param( $pk, $id );
+
+    # override object's values with those from params
+    $form->init_fields();
+
+    # return if there was a problem with any param values
+    unless ( $form->validate() ) {
+        $c->stash->{error} = $form->error;    # NOT throw_error()
+        $c->stash->{template} ||= $self->default_template;    # MUST specify
+        return 0;
+    }
+
+    # re-set object's values from the now-valid form
+    $form->$obj_meth( $obj->delegate );
 
   # set id explicitly since there's some bug with param() setting it in save()
-    $o->$pk( $c->stash->{object_id} );
+    $obj->$pk( $c->stash->{object_id} );
 
     # let serial column work its magic
-    $o->$pk(undef)
-        if ( !$o->$pk or $o->$pk == 0 or $c->stash->{object_id} == 0 );
+    $obj->$pk(undef)
+        if ( !$obj->$pk or $obj->$pk == 0 or $c->stash->{object_id} == 0 );
 
-    $self->NEXT::save_obj( $c, $o );
+    return $obj;
+}
+
+=head2 do_search( I<context>, I<arg> )
+
+Makes form values sticky then calls the base do_search() method with NEXT.
+
+=cut
+
+sub do_search {
+    my ( $self, $c, @arg ) = @_;
+
+    # make form sticky
+    $c->stash->{form} ||= $self->form;
+    $c->stash->{form}->params( $c->req->params );
+    $c->stash->{form}->init_fields();
+
+    return $self->NEXT::do_search( $c, @arg );
 }
 
 1;
