@@ -6,4 +6,9 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
 0.02    20 Oct 2007
         * fix POD line so that CPAN doesn't think there's doc separate from code
 
+0.03    23 Oct 2007
+
+0.04    25 Oct 2007
+        * override form() to stash the $c object in app()
+
 

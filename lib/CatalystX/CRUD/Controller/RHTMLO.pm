@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 NAME
 
@@ -26,6 +26,23 @@ basic CRUD applications.
 The following methods are new or override base methods.
 
 =cut
+
+=head2 form( I<context> )
+
+Returns an instance of config->{form_class}. A single form object is instantiated and
+cached in the controller object. The form's clear() method is called before returning.
+In addition the I<context> object is stashed via the forms's app() method.
+
+=cut
+
+sub form {
+    my ($self, $c) = @_;
+    $self->{_form} ||= $self->form_class->new;
+    $self->{_form}->clear;
+    $self->{_form}->app($c);
+    return $self->{_form};
+}
+
 
 =head2 form_to_object( I<context> )
 
