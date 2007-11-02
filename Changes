@@ -11,4 +11,9 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
 0.04    25 Oct 2007
         * override form() to stash the $c object in app()
 
+0.05    1 November 2007
+        * return from do_search() if no input to form
+        * pass field names on to NEXT do_search so they make it to make_query()
+
+
 

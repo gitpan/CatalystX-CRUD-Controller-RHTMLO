@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 NAME
 
@@ -103,10 +103,17 @@ sub do_search {
 
     # make form sticky
     $c->stash->{form} ||= $self->form;
+
+    # if we have no input, just return for initial search
+    if(!@arg && !$c->req->param && $c->action eq 'search') {
+        $c->log->debug("no input to search. return");
+        return;
+    }
+
     $c->stash->{form}->params( $c->req->params );
     $c->stash->{form}->init_fields();
 
-    return $self->NEXT::do_search( $c, @arg );
+    return $self->NEXT::do_search( $c, scalar $c->stash->{form}->field_names, @arg );
 }
 
 1;
