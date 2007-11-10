@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 NAME
 
@@ -36,13 +36,12 @@ In addition the I<context> object is stashed via the forms's app() method.
 =cut
 
 sub form {
-    my ($self, $c) = @_;
+    my ( $self, $c ) = @_;
     $self->{_form} ||= $self->form_class->new;
     $self->{_form}->clear;
     $self->{_form}->app($c);
     return $self->{_form};
 }
-
 
 =head2 form_to_object( I<context> )
 
@@ -64,7 +63,7 @@ sub form_to_object {
     $form->$form_meth( $obj->delegate );
 
     # set param values from request
-    $form->params( $self->param_hash($c) );
+    $form->params( $c->req->params );
 
     # id always comes from url but not necessarily from form
     $form->param( $pk, $id );
@@ -105,7 +104,7 @@ sub do_search {
     $c->stash->{form} ||= $self->form;
 
     # if we have no input, just return for initial search
-    if(!@arg && !$c->req->param && $c->action eq 'search') {
+    if ( !@arg && !$c->req->param && $c->action eq 'search' ) {
         $c->log->debug("no input to search. return");
         return;
     }
@@ -113,7 +112,8 @@ sub do_search {
     $c->stash->{form}->params( $c->req->params );
     $c->stash->{form}->init_fields();
 
-    return $self->NEXT::do_search( $c, scalar $c->stash->{form}->field_names, @arg );
+    return $self->NEXT::do_search( $c, scalar $c->stash->{form}->field_names,
+        @arg );
 }
 
 1;

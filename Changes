@@ -15,5 +15,10 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
         * return from do_search() if no input to form
         * pass field names on to NEXT do_search so they make it to make_query()
 
+0.06    9 Nov 2007
+        * fix legacy refactoring bug in form_to_object() (no such thing as param_hash() method)
+          Thanks to John Siracusa for the catch.
+
+
 
 
