@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 NAME
 
@@ -66,10 +66,12 @@ sub form_to_object {
     $form->params( $c->req->params );
 
     # id always comes from url but not necessarily from form
-    $form->param( $pk, $id );
+    $form->param( $pk => $id );
 
-    # override object's values with those from params
-    $form->init_fields();
+    # override form's values with those from params
+    # no_clear is important because we already initialized with object
+    # and we do not want to undo those mods.
+    $form->init_fields( no_clear => 1 );
 
     # return if there was a problem with any param values
     unless ( $form->validate() ) {
