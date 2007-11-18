@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 NAME
 
@@ -106,7 +106,7 @@ sub do_search {
     $c->stash->{form} ||= $self->form;
 
     # if we have no input, just return for initial search
-    if ( !@arg && !$c->req->param && $c->action eq 'search' ) {
+    if ( !@arg && !$c->req->param && $c->action->name eq 'search' ) {
         $c->log->debug("no input to search. return");
         return;
     }

@@ -23,6 +23,9 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
         * fix bug with form->init_fields where values were being un-initialized if params were not
           present.
 
+0.08    17 Nov 2007
+        * fix bug when checking for whether do_search() should be performed.
+
 
 
 
