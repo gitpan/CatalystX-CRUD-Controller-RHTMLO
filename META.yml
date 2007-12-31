@@ -1,12 +1,12 @@
 --- #YAML:1.0
 name:                CatalystX-CRUD-Controller-RHTMLO
-version:             0.08
+version:             0.09
 abstract:            Rose::HTML::Objects CRUD controller
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.36
 distribution_type:   module
 requires:     
-    CatalystX::CRUD:               0
+    CatalystX::CRUD:               0.2
     Test::More:                    0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html

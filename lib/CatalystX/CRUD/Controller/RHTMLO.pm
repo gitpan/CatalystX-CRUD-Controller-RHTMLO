@@ -3,7 +3,7 @@ use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 NAME
 
@@ -27,20 +27,61 @@ The following methods are new or override base methods.
 
 =cut
 
-=head2 form( I<context> )
+=head2 create
 
-Returns an instance of config->{form_class}. A single form object is instantiated and
-cached in the controller object. The form's clear() method is called before returning.
-In addition the I<context> object is stashed via the forms's app() method.
+Attribute: Local
+
+Overrides base create() to optionally pre-populate form
+with param-based values.
+
+=cut
+
+sub create : Local {
+    my ( $self, $c ) = @_;
+    $c->forward( 'fetch', [0] );
+    $c->forward('edit');
+    for my $field ( $self->field_names ) {
+        if ( exists $c->req->params->{$field} ) {
+
+            $c->stash->{form}
+                ->field_value( $field, $c->req->params->{$field} );
+        }
+    }
+}
+
+=head2 form( [ I<context> ] )
+
+Returns an instance of config->{form_class}. 
+A single form object is instantiated and cached in the controller object.
+The form's clear() method is called before returning.
+If I<context> object is passed it is stashed via the forms's app() method.
+
+B<NOTE:> The form is cleared only the B<first time>
+form() is called in each request cycle, and only if I<content> is present.
+This is B<different> than the behaviour described in 
+CatalystX::CRUD::Controller.
 
 =cut
 
 sub form {
     my ( $self, $c ) = @_;
     $self->{_form} ||= $self->form_class->new;
-    $self->{_form}->clear;
-    $self->{_form}->app($c);
+    if ($c) {
+        $self->{_form}->clear unless $c->stash->{_form_called}++;
+        $self->{_form}->app($c);
+    }
     return $self->{_form};
+}
+
+=head2 field_names
+
+Returns an array ref of the field names in form.
+
+=cut
+
+sub field_names {
+    my ($self) = @_;
+    return $self->form->field_names;
 }
 
 =head2 form_to_object( I<context> )
@@ -107,7 +148,7 @@ sub do_search {
 
     # if we have no input, just return for initial search
     if ( !@arg && !$c->req->param && $c->action->name eq 'search' ) {
-        $c->log->debug("no input to search. return");
+        $c->log->debug("no input to search. return") if $c->debug;
         return;
     }
 

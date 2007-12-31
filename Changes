@@ -26,7 +26,10 @@ Revision history for CatalystX-CRUD-Controller-RHTMLO
 0.08    17 Nov 2007
         * fix bug when checking for whether do_search() should be performed.
 
-
-
+0.09    31 Dec 2007
+        * implement field_names() per CXC::Controller API.
+        * fix bug in form() where app() would be set to undef if $c was not passed.
+        * added custom create() to allow for form prepopulation via $c->req->params
+        * make debug() statement in do_search() conditional on $c->debug
 
 
