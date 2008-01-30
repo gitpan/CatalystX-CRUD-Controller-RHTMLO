@@ -2,8 +2,9 @@ package CatalystX::CRUD::Controller::RHTMLO;
 use strict;
 use base qw( CatalystX::CRUD::Controller );
 use NEXT;
+use Carp;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 NAME
 
@@ -42,7 +43,6 @@ sub create : Local {
     $c->forward('edit');
     for my $field ( $self->field_names ) {
         if ( exists $c->req->params->{$field} ) {
-
             $c->stash->{form}
                 ->field_value( $field, $c->req->params->{$field} );
         }
@@ -97,16 +97,16 @@ sub form_to_object {
     my $obj       = $c->stash->{object};
     my $obj_meth  = $self->init_object;
     my $form_meth = $self->init_form;
-    my $id        = $c->stash->{object_id};
     my $pk        = $self->primary_key;
+
+    # id always comes from url but not necessarily from form
+    my $id = $c->req->params->{$pk} || $c->stash->{object_id};
 
     # initialize the form with the object's values
     $form->$form_meth( $obj->delegate );
 
     # set param values from request
     $form->params( $c->req->params );
-
-    # id always comes from url but not necessarily from form
     $form->param( $pk => $id );
 
     # override form's values with those from params
@@ -124,12 +124,15 @@ sub form_to_object {
     # re-set object's values from the now-valid form
     $form->$obj_meth( $obj->delegate );
 
-  # set id explicitly since there's some bug with param() setting it in save()
-    $obj->$pk( $c->stash->{object_id} );
+    # set id explicitly since there's some bug
+    # with param() setting it in save()
+    $obj->$pk($id);
 
     # let serial column work its magic
     $obj->$pk(undef)
-        if ( !$obj->$pk or $obj->$pk == 0 or $c->stash->{object_id} == 0 );
+        if ( !$obj->$pk || $obj->$pk eq '0' || $id eq '0' );
+
+    #carp "object $pk == $id ? " . $obj->$pk;
 
     return $obj;
 }
