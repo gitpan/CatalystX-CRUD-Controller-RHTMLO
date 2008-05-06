@@ -1,10 +1,10 @@
 package CatalystX::CRUD::Controller::RHTMLO;
 use strict;
 use base qw( CatalystX::CRUD::Controller );
-use NEXT;
 use Carp;
+use Class::C3;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 =head1 NAME
 
@@ -39,12 +39,16 @@ with param-based values.
 
 sub create : Local {
     my ( $self, $c ) = @_;
-    $c->forward( 'fetch', [0] );
-    $c->forward('edit');
+    $self->next::method($c);
+
+    # allow for params to be passed in to seed the form/object
     for my $field ( $self->field_names ) {
         if ( exists $c->req->params->{$field} ) {
             $c->stash->{form}
                 ->field_value( $field, $c->req->params->{$field} );
+            if ( $c->stash->{object}->can($field) ) {
+                $c->stash->{object}->$field( $c->req->params->{$field} );
+            }
         }
     }
 }
@@ -84,6 +88,22 @@ sub field_names {
     return $self->form->field_names;
 }
 
+=head2 all_form_errors
+
+Convenience method for aggregating all form errors. Returns a single
+scalar string.
+
+=cut
+
+sub all_form_errors {
+    my ( $self, $form ) = @_;
+    my @err = ( $form->error );
+    for my $f ( $form->fields ) {
+        push( @err, $f->name . ': ' . $f->error ) if $f->error;
+    }
+    return join( "\n", @err );
+}
+
 =head2 form_to_object( I<context> )
 
 Overrides base method.
@@ -103,7 +123,9 @@ sub form_to_object {
     my $id = $c->req->params->{$pk} || $c->stash->{object_id};
 
     # initialize the form with the object's values
-    $form->$form_meth( $obj->delegate );
+    # TODO this might not work if the delegate() does not have
+    # 1-to-1 mapping of form fields to object methods.
+    $form->$form_meth($obj);
 
     # set param values from request
     $form->params( $c->req->params );
@@ -117,12 +139,18 @@ sub form_to_object {
     # return if there was a problem with any param values
     unless ( $form->validate() ) {
         $c->stash->{error} = $form->error;    # NOT throw_error()
+        $c->log->debug(
+            "RHTMLO: form error:\n" . $self->all_form_errors($form) )
+            if $c->debug;
         $c->stash->{template} ||= $self->default_template;    # MUST specify
         return 0;
     }
 
     # re-set object's values from the now-valid form
-    $form->$obj_meth( $obj->delegate );
+    # TODO this might not work if the delegate() does not have
+    # 1-to-1 mapping of form fields to object methods.
+    # this is same objection as $form_metho call above
+    $form->$obj_meth($obj);
 
     # set id explicitly since there's some bug
     # with param() setting it in save()
@@ -158,7 +186,7 @@ sub do_search {
     $c->stash->{form}->params( $c->req->params );
     $c->stash->{form}->init_fields();
 
-    return $self->NEXT::do_search( $c, scalar $c->stash->{form}->field_names,
+    return $self->next::method( $c, scalar $c->stash->{form}->field_names,
         @arg );
 }
 
@@ -206,8 +234,6 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=CatalystX-CRUD-Controller-RHTMLO>
 L<http://search.cpan.org/dist/CatalystX-CRUD-Controller-RHTMLO>
 
 =back
-
-=head1 ACKNOWLEDGEMENTS
 
 =head1 COPYRIGHT & LICENSE
 
