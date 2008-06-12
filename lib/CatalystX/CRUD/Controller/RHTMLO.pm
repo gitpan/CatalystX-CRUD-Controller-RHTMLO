@@ -4,7 +4,7 @@ use base qw( CatalystX::CRUD::Controller );
 use Carp;
 use Class::C3;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 =head1 NAME
 
@@ -42,7 +42,7 @@ sub create : Local {
     $self->next::method($c);
 
     # allow for params to be passed in to seed the form/object
-    for my $field ( $self->field_names ) {
+    for my $field ( $self->field_names($c) ) {
         if ( exists $c->req->params->{$field} ) {
             $c->stash->{form}
                 ->field_value( $field, $c->req->params->{$field} );
@@ -53,15 +53,15 @@ sub create : Local {
     }
 }
 
-=head2 form( [ I<context> ] )
+=head2 form( I<context> )
 
 Returns an instance of config->{form_class}. 
 A single form object is instantiated and cached in the controller object.
 The form's clear() method is called before returning.
-If I<context> object is passed it is stashed via the forms's app() method.
+I<context> object is set in forms's app() method.
 
 B<NOTE:> The form is cleared only the B<first time>
-form() is called in each request cycle, and only if I<content> is present.
+form() is called in each request cycle.
 This is B<different> than the behaviour described in 
 CatalystX::CRUD::Controller.
 
@@ -69,23 +69,22 @@ CatalystX::CRUD::Controller.
 
 sub form {
     my ( $self, $c ) = @_;
-    $self->{_form} ||= $self->form_class->new;
-    if ($c) {
-        $self->{_form}->clear unless $c->stash->{_form_called}++;
-        $self->{_form}->app($c);
-    }
+    $self->{_form} ||= $self->form_class->new( app => $c );
+    $self->{_form}->app($c) unless defined $self->{_form}->app;
+    $self->{_form}->clear unless $self->{_form}->app->stash->{_form_called}->{ $self->action_namespace }++;
     return $self->{_form};
 }
 
-=head2 field_names
+=head2 field_names( I<context> )
 
 Returns an array ref of the field names in form.
 
 =cut
 
 sub field_names {
-    my ($self) = @_;
-    return $self->form->field_names;
+    my ($self, $c) = @_;
+    $self->throw_error("context required") unless defined $c;
+    return $self->form($c)->field_names;
 }
 
 =head2 all_form_errors
