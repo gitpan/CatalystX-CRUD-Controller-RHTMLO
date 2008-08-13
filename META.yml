@@ -1,16 +1,13 @@
---- #YAML:1.0
-name:                CatalystX-CRUD-Controller-RHTMLO
-version:             0.13
-abstract:            Rose::HTML::Objects CRUD controller
-license:             ~
-author:              
-    - Peter Karman <karman@cpan.org>
-generated_by:        ExtUtils::MakeMaker version 6.42
-distribution_type:   module
-requires:     
-    CatalystX::CRUD:               0.26
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         CatalystX-CRUD-Controller-RHTMLO
+version:      0.14
+version_from: lib/CatalystX/CRUD/Controller/RHTMLO.pm
+installdirs:  site
+requires:
+    CatalystX::CRUD:               0.28
     Rose::HTML::Objects:           0
     Test::More:                    0
-meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30
