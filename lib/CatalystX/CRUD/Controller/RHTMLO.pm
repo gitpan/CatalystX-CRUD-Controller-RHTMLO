@@ -4,7 +4,7 @@ use base qw( CatalystX::CRUD::Controller );
 use Carp;
 use Class::C3;
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 =head1 NAME
 
@@ -27,31 +27,6 @@ basic CRUD applications.
 The following methods are new or override base methods.
 
 =cut
-
-=head2 create
-
-Attribute: Local
-
-Overrides base create() to optionally pre-populate form
-with param-based values.
-
-=cut
-
-sub create : Local {
-    my ( $self, $c ) = @_;
-    $self->next::method($c);
-
-    # allow for params to be passed in to seed the form/object
-    for my $field ( $self->field_names($c) ) {
-        if ( exists $c->req->params->{$field} ) {
-            $c->stash->{form}
-                ->field_value( $field, $c->req->params->{$field} );
-            if ( $c->stash->{object}->can($field) ) {
-                $c->stash->{object}->$field( $c->req->params->{$field} );
-            }
-        }
-    }
-}
 
 =head2 form( I<context> )
 
@@ -119,7 +94,9 @@ sub form_to_object {
     my $obj_meth  = $self->init_object;
     my $form_meth = $self->init_form;
 
-    # id always comes from url but not necessarily from form
+    # id always comes from url but not necessarily from form,
+    # but in either case, $obj should already have %pk set
+    # since it was used in fetch()
     my $id = $c->stash->{object_id};
     my %pk = $self->get_primary_key( $c, $id );
 
@@ -129,29 +106,7 @@ sub form_to_object {
     $form->$form_meth($obj);
 
     # set param values from request.
-    # we dereference req->params in order to avoid setting $id
-    # if it is an emptry string (as when submitting from create).
-    # This is mostly to fix the case where the PK is an auto-increment
-    # field, which we do not want to set in the object.
-    my %params = %{ $c->req->params };
-    if ( !$id ) {
-        my $pk_field = $self->primary_key;
-        if (    !ref($pk_field)
-            and defined $params{$pk_field}
-            and !length $params{$pk_field} )
-        {
-            delete $params{$pk_field};
-        }
-    }
-    $form->params( \%params );
-
-    # set PKs specifically, in case they are not submitted
-    # explicitly in form
-    if ($id) {
-        for my $field ( keys %pk ) {
-            $form->param( $field => $pk{$field} );
-        }
-    }
+    $form->params( $c->req->params );
 
     # override form's values with those from params
     # no_clear is important because we already initialized with object
@@ -174,8 +129,6 @@ sub form_to_object {
     # this is same objection as $form_method call above
     $form->$obj_meth($obj);
 
-    #Data::Dump::dump $obj;
-
     return $obj;
 }
 
@@ -190,7 +143,7 @@ sub do_search {
     my ( $self, $c, @arg ) = @_;
 
     # make form sticky
-    $c->stash->{form} ||= $self->form;
+    $c->stash->{form} ||= $self->form($c);
 
     # if we have no input, just return for initial search
     if ( !@arg && !$c->req->param && $c->action->name eq 'search' ) {
@@ -201,8 +154,7 @@ sub do_search {
     $c->stash->{form}->params( $c->req->params );
     $c->stash->{form}->init_fields();
 
-    return $self->next::method( $c, scalar $c->stash->{form}->field_names,
-        @arg );
+    return $self->next::method( $c, scalar $self->field_names($c), @arg );
 }
 
 1;
