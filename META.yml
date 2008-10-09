@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                CatalystX-CRUD-Controller-RHTMLO
-version:             0.17
+version:             0.18
 abstract:            Rose::HTML::Objects CRUD controller
 license:             ~
 author:              

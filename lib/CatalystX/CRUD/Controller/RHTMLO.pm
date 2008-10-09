@@ -4,7 +4,7 @@ use base qw( CatalystX::CRUD::Controller );
 use Carp;
 use Class::C3;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 =head1 NAME
 
@@ -148,6 +148,10 @@ sub do_search {
     # if we have no input, just return for initial search
     if ( !@arg && !$c->req->param && $c->action->name eq 'search' ) {
         $c->log->debug("no input to search. return") if $c->debug;
+        # must clear explicitly since this is a new search
+        # and form may have been initialized elsewhere
+        $c->stash->{form}->clear;
+        $c->log->debug("rhtmlo form cleared") if $c->debug;
         return;
     }
 
